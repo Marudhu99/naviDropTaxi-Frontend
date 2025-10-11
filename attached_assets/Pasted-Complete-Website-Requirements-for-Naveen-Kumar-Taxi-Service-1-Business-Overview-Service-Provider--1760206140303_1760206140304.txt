@@ -1,0 +1,146 @@
+Complete Website Requirements for Naveen Kumar Taxi Service
+1. Business Overview
+Service Provider: M. Naveen Kumar
+Contact: 9787099804
+Address: 291 South Street, Panaiolaipadi, Padiagragram Post, Chengam Tk, Thiruvannamalai District
+Service Area: Thiruvannamalai District and surrounding areas
+
+2. Vehicle Fleet & Pricing
+2.1 Sedan (4+1 Seater) - ₹14/km
+Capacity: 4 passengers + 1 driver
+Models: Tata Indica, Swift Dzire
+Rate: ₹14 per kilometer
+2.2 SUV (6+1 Seater) - ₹18/km
+Capacity: 6 passengers + 1 driver
+Models: Mahindra Xylo, Chevrolet Tavera
+Rate: ₹18 per kilometer
+2.3 Innova Premium (6+1 Seater) - ₹19/km
+Capacity: 6 passengers + 1 driver
+Models: Toyota Innova (Premium category)
+Rate: ₹19 per kilometer
+Special Note: Separate booking category due to premium status
+2.4 MUV (7+1 Seater) - ₹18/km
+Capacity: 7 passengers + 1 driver
+Models: Chevrolet Tavera
+Rate: ₹18 per kilometer
+3. Website Design Requirements
+3.1 Visual Design
+Background: Animated background images with smooth transitions
+Theme: Professional taxi/transportation theme with blue and white color scheme
+Responsiveness: Fully mobile-friendly and responsive design
+User Experience: Attractive, user-friendly interface suitable for all age groups
+Animations: Smooth CSS animations for enhanced visual appeal
+3.2 Contact Integration
+WhatsApp: Direct link to WhatsApp chat (9787099804)
+Telegram: Direct link to Telegram chat (9787099804)
+Phone Call: Click-to-call functionality for mobile devices
+Placement: Floating contact buttons always visible on screen
+4. Booking Workflow
+4.1 Step 1: Trip Details Input
+Required Fields:
+
+Pickup Location (text input)
+Drop Location (text input)
+Travel Date (date picker - minimum today's date)
+Travel Time (time picker)
+Vehicle Type Selection (radio buttons with visual cards)
+4.2 Step 2: Fare Calculation
+Automatic Calculation: Display estimated fare based on vehicle type and estimated distance
+Rate Display: Show per-kilometer rate for selected vehicle
+Disclaimer: "Actual fare may vary based on exact distance and route"
+4.3 Step 3: User Details Collection
+Required Fields:
+
+Full Name (mandatory)
+Mobile Number (mandatory, 10-digit validation)
+Email Address (optional)
+Email Purpose: If provided, booking confirmation will be sent via email
+
+4.4 Step 4: Booking Confirmation
+Confirmation Message: Success notification with next steps
+WhatsApp Integration: Automatic opening of WhatsApp with pre-filled booking details
+Manual Processing: All bookings processed manually by Naveen Kumar's team
+5. Technical Specifications
+5.1 Frontend Requirements
+Framework: HTML5, CSS3, JavaScript (vanilla or with Tailwind CSS)
+Responsiveness: Bootstrap or CSS Grid/Flexbox
+Browser Compatibility: Chrome, Firefox, Safari, Edge (latest versions)
+Mobile Optimization: Touch-friendly interface, fast loading
+5.2 Form Validation
+Client-side Validation: Real-time form validation
+Required Field Checks: Prevent submission with missing mandatory fields
+Mobile Number Validation: 10-digit Indian mobile number format
+Email Validation: Standard email format (when provided)
+5.3 Integration Requirements
+WhatsApp API: Direct messaging with pre-filled booking details
+Telegram API: Direct link to Telegram chat
+Phone Integration: tel: protocol for mobile click-to-call
+6. Content Requirements
+6.1 Header Section
+Logo/Brand: Naveen Kumar Taxi Service
+Contact Display: Phone number prominently displayed
+Navigation: Simple, clean navigation menu
+6.2 Hero Section
+Headline: Compelling taxi service messaging
+Key Features: 24/7 availability, competitive rates, clean vehicles
+Call-to-Action: Prominent booking form
+6.3 Vehicle Showcase
+Visual Cards: Each vehicle type with image/icon
+Specifications: Seating capacity, model names, rates
+Selection Interface: Easy-to-use selection mechanism
+6.4 Footer Section
+Contact Information: Complete address and phone number
+Service Areas: Thiruvannamalai district coverage
+Social Links: WhatsApp and Telegram links
+Copyright: Standard copyright notice
+7. Functional Requirements
+7.1 Booking System
+No Payment Gateway: Booking confirmation only, payment after service
+Manual Processing: All bookings handled manually by service provider
+Confirmation Method: WhatsApp message with booking details
+Email Notifications: Optional email confirmation if email provided
+7.2 Communication Features
+Instant Contact: Multiple ways to reach service provider
+Pre-filled Messages: WhatsApp integration with booking details
+Quick Access: Floating contact buttons for immediate access
+7.3 User Experience
+Simple Flow: Intuitive booking process
+Clear Pricing: Transparent rate display
+Immediate Feedback: Instant fare estimates
+Mobile-First: Optimized for mobile users
+8. Business Logic
+8.1 Pricing Structure
+Distance-Based: All rates calculated per kilometer
+No Hidden Charges: Transparent pricing display
+Estimate Accuracy: Clear disclaimer about final fare variations
+8.2 Booking Management
+Manual Confirmation: Human verification of all bookings
+Driver Assignment: Manual assignment by service provider
+Schedule Management: Date/time booking with manual coordination
+8.3 Customer Communication
+Multi-Channel: WhatsApp, Telegram, and phone support
+Response Time: Quick response commitment
+Booking Updates: Manual updates via phone/WhatsApp
+9. Additional Features
+9.1 Optional Enhancements
+FAQ Section: Common questions about service
+Testimonials: Customer reviews and feedback
+Service Areas Map: Visual representation of coverage area
+Gallery: Photos of vehicles and service
+9.2 Future Considerations
+Online Payment Integration: For future expansion
+Real-time Tracking: GPS integration possibility
+Driver App: Separate driver management system
+Customer Portal: Booking history and management
+10. Hosting and Deployment
+10.1 Technical Requirements
+Hosting: Standard web hosting with PHP/HTML support
+Domain: Professional domain name
+SSL Certificate: Secure HTTPS connection
+Mobile Optimization: Fast loading on mobile networks
+10.2 Maintenance
+Content Updates: Easy content management
+Contact Information: Simple contact detail updates
+Pricing Updates: Easy rate modification system
+Vehicle Information: Simple fleet information updates
+This comprehensive requirement document covers all aspects needed to create a professional taxi booking website for Naveen Kumar Taxi Service, focusing on user experience, mobile optimization, and seamless communication integration.
