@@ -39,7 +39,11 @@ export default function WhyChooseUs() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className="text-center hover-elevate transition-all duration-300">
+            <Card 
+              key={index} 
+              className="text-center hover-elevate transition-all duration-300 animate-slide-up"
+              style={{ animationDelay: `${index * 0.15}s`, animationFillMode: 'backwards' }}
+            >
               <CardContent className="p-6">
                 <div className="mb-4 flex justify-center">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">

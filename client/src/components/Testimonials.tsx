@@ -41,7 +41,11 @@ export default function Testimonials() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="hover-elevate transition-all duration-300">
+            <Card 
+              key={index} 
+              className="hover-elevate transition-all duration-300 animate-slide-up"
+              style={{ animationDelay: `${index * 0.2}s`, animationFillMode: 'backwards' }}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center gap-4 mb-4">
                   <Avatar className="w-12 h-12">

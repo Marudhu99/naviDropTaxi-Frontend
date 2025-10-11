@@ -21,7 +21,8 @@ export default function FloatingContactButtons() {
     <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
       <Button
         size="icon"
-        className="h-14 w-14 rounded-full shadow-lg bg-[#25D366] hover:bg-[#20BD5A] text-white"
+        className="h-14 w-14 rounded-full shadow-lg bg-[#25D366] hover:bg-[#20BD5A] text-white animate-float"
+        style={{ animationDelay: '0s' }}
         onClick={handleWhatsApp}
         data-testid="button-whatsapp-float"
       >
@@ -29,7 +30,8 @@ export default function FloatingContactButtons() {
       </Button>
       <Button
         size="icon"
-        className="h-14 w-14 rounded-full shadow-lg bg-[#0088cc] hover:bg-[#006ba3] text-white"
+        className="h-14 w-14 rounded-full shadow-lg bg-[#0088cc] hover:bg-[#006ba3] text-white animate-float"
+        style={{ animationDelay: '0.2s' }}
         onClick={handleTelegram}
         data-testid="button-telegram-float"
       >
@@ -37,7 +39,8 @@ export default function FloatingContactButtons() {
       </Button>
       <Button
         size="icon"
-        className="h-14 w-14 rounded-full shadow-lg"
+        className="h-14 w-14 rounded-full shadow-lg animate-float"
+        style={{ animationDelay: '0.4s' }}
         onClick={handleCall}
         data-testid="button-call-float"
       >

@@ -23,7 +23,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-gradient-to-br from-secondary/95 via-secondary/85 to-secondary/70 z-10" />
       
       <div 
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center animate-slow-zoom"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070')`,
         }}
@@ -31,11 +31,11 @@ export default function HeroSection() {
 
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16 md:py-24">
         <div className="text-center mb-8 md:mb-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 font-heading">
-            Your Trusted Ride in<br className="hidden sm:block" /> Thiruvannamalai
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6 font-heading animate-fade-in">
+            Your Journey, Our Priority
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-white/95 max-w-3xl mx-auto mb-6">
-            Comfortable & Affordable Taxi Services - Available 24/7
+          <p className="text-lg sm:text-xl md:text-2xl text-white/95 max-w-3xl mx-auto mb-6 animate-fade-in-delay">
+            Experience Safe, Comfortable & Affordable Taxi Services - Available 24/7
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 text-white/90">
             <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">

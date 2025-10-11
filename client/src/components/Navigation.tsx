@@ -38,7 +38,9 @@ export default function Navigation() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             <div className="flex-shrink-0">
-              <h1 className="text-xl md:text-2xl font-bold font-heading">
+              <h1 className={`text-xl md:text-2xl font-bold font-heading transition-colors ${
+                isScrolled ? 'text-foreground' : 'text-white'
+              }`}>
                 <span className="text-primary">🚖</span> Naveen Kumar Taxi
               </h1>
             </div>
@@ -46,28 +48,36 @@ export default function Navigation() {
             <div className="hidden md:flex items-center gap-8">
               <button
                 onClick={() => scrollToSection('home')}
-                className="text-foreground hover:text-primary transition-colors font-medium"
+                className={`${
+                  isScrolled ? 'text-foreground' : 'text-white'
+                } hover:text-primary transition-colors font-medium`}
                 data-testid="link-home"
               >
                 Home
               </button>
               <button
                 onClick={() => scrollToSection('fleet')}
-                className="text-foreground hover:text-primary transition-colors font-medium"
+                className={`${
+                  isScrolled ? 'text-foreground' : 'text-white'
+                } hover:text-primary transition-colors font-medium`}
                 data-testid="link-fleet"
               >
                 Our Fleet
               </button>
               <button
                 onClick={() => scrollToSection('about')}
-                className="text-foreground hover:text-primary transition-colors font-medium"
+                className={`${
+                  isScrolled ? 'text-foreground' : 'text-white'
+                } hover:text-primary transition-colors font-medium`}
                 data-testid="link-about"
               >
                 About Us
               </button>
               <button
                 onClick={() => scrollToSection('contact')}
-                className="text-foreground hover:text-primary transition-colors font-medium"
+                className={`${
+                  isScrolled ? 'text-foreground' : 'text-white'
+                } hover:text-primary transition-colors font-medium`}
                 data-testid="link-contact"
               >
                 Contact
@@ -94,7 +104,9 @@ export default function Navigation() {
             </div>
 
             <button
-              className="md:hidden text-foreground"
+              className={`md:hidden transition-colors ${
+                isScrolled ? 'text-foreground' : 'text-white'
+              }`}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               data-testid="button-mobile-menu"
             >

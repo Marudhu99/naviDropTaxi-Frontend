@@ -57,12 +57,17 @@ export default function FleetSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {vehicles.map((vehicle) => (
-            <VehicleCard
+          {vehicles.map((vehicle, index) => (
+            <div
               key={vehicle.name}
-              {...vehicle}
-              onBook={() => handleBook(vehicle.name)}
-            />
+              className="animate-slide-up"
+              style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'backwards' }}
+            >
+              <VehicleCard
+                {...vehicle}
+                onBook={() => handleBook(vehicle.name)}
+              />
+            </div>
           ))}
         </div>
 
