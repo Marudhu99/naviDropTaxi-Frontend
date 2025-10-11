@@ -20,7 +20,7 @@ export default function HeroSection() {
 
   return (
     <section id="home" className="relative min-h-[85vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/70 to-primary/50 z-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-secondary/95 via-secondary/85 to-secondary/70 z-10" />
       
       <div 
         className="absolute inset-0 bg-cover bg-center"

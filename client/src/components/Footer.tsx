@@ -18,12 +18,12 @@ export default function Footer() {
   };
 
   return (
-    <footer id="contact" className="bg-primary text-primary-foreground py-12 md:py-16">
+    <footer id="contact" className="bg-secondary text-secondary-foreground py-12 md:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
           <div>
             <h3 className="text-2xl font-bold mb-4 font-heading">Naveen Kumar Taxi Service</h3>
-            <p className="text-primary-foreground/90 mb-4">
+            <p className="text-secondary-foreground/90 mb-4">
               Your trusted travel partner in Thiruvannamalai District and surrounding areas.
             </p>
             <div className="flex gap-3">
@@ -48,7 +48,7 @@ export default function Footer() {
 
           <div>
             <h4 className="text-lg font-semibold mb-4 font-heading">Contact Information</h4>
-            <div className="space-y-3 text-primary-foreground/90">
+            <div className="space-y-3 text-secondary-foreground/90">
               <button
                 onClick={handleCall}
                 className="flex items-start gap-3 hover:text-white transition-colors w-full text-left"
@@ -78,7 +78,7 @@ export default function Footer() {
 
           <div>
             <h4 className="text-lg font-semibold mb-4 font-heading">Service Areas</h4>
-            <ul className="space-y-2 text-primary-foreground/90">
+            <ul className="space-y-2 text-secondary-foreground/90">
               <li>Thiruvannamalai</li>
               <li>Chengam</li>
               <li>Polur</li>
@@ -89,7 +89,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/20 mt-8 pt-8 text-center text-primary-foreground/80">
+        <div className="border-t border-white/20 mt-8 pt-8 text-center text-secondary-foreground/80">
           <p>&copy; {new Date().getFullYear()} Naveen Kumar Taxi Service. All rights reserved.</p>
         </div>
       </div>
