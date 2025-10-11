@@ -89,7 +89,11 @@ export default function Navigation() {
                 variant="outline"
                 size="default"
                 onClick={handleCall}
-                className="gap-2"
+                className={`gap-2 transition-colors ${
+                  isScrolled
+                    ? 'border-border text-foreground hover:bg-accent'
+                    : 'border-white text-white hover:bg-white/20'
+                }`}
                 data-testid="button-call-header"
               >
                 <Phone className="w-4 h-4" />
