@@ -31,17 +31,17 @@ export default function Navigation() {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? 'bg-background/95 backdrop-blur-md shadow-md'
+            ? 'bg-background/95 backdrop-blur-lg shadow-lg border-b border-border'
             : 'bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             <div className="flex-shrink-0">
-              <h1 className={`text-xl md:text-2xl font-bold font-heading transition-colors ${
-                isScrolled ? 'text-foreground' : 'text-white'
+              <h1 className={`text-xl md:text-2xl font-bold font-heading transition-all duration-300 ${
+                isScrolled ? 'text-foreground' : 'text-white drop-shadow-lg'
               }`}>
-                <span className="text-primary">🚖</span> Naveen Kumar Taxi
+                <span className="text-primary text-2xl md:text-3xl">🚖</span> Navi Drop Taxi
               </h1>
             </div>
 
@@ -89,21 +89,22 @@ export default function Navigation() {
                 variant="outline"
                 size="default"
                 onClick={handleCall}
-                className={`gap-2 transition-colors ${
+                className={`gap-2 transition-all duration-300 font-semibold ${
                   isScrolled
-                    ? 'border-border text-foreground hover:bg-accent'
-                    : 'border-white text-white hover:bg-white/20'
+                    ? 'border-2 border-border text-foreground hover:bg-accent hover:scale-105'
+                    : 'border-2 border-white/80 text-white hover:bg-white/20 hover:scale-105 backdrop-blur-sm'
                 }`}
                 data-testid="button-call-header"
               >
                 <Phone className="w-4 h-4" />
-                <span className="font-semibold">9787099804</span>
+                <span>9787099804</span>
               </Button>
               <Button
                 onClick={() => scrollToSection('booking')}
+                className="btn-ripple bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                 data-testid="button-book-header"
               >
-                Book Now
+                Book Now →
               </Button>
             </div>
 
@@ -120,7 +121,7 @@ export default function Navigation() {
         </div>
 
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-background border-t">
+          <div className="md:hidden bg-background/98 backdrop-blur-lg border-t shadow-lg animate-fade-in">
             <div className="px-4 py-4 space-y-3">
               <button
                 onClick={() => scrollToSection('home')}
@@ -153,19 +154,19 @@ export default function Navigation() {
               <div className="pt-2 space-y-2">
                 <Button
                   variant="outline"
-                  className="w-full gap-2"
+                  className="w-full gap-2 border-2 font-semibold"
                   onClick={handleCall}
                   data-testid="button-call-mobile"
                 >
                   <Phone className="w-4 h-4" />
-                  <span className="font-semibold">9787099804</span>
+                  <span>9787099804</span>
                 </Button>
                 <Button
-                  className="w-full"
+                  className="w-full btn-ripple bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white font-bold"
                   onClick={() => scrollToSection('booking')}
                   data-testid="button-book-mobile"
                 >
-                  Book Now
+                  Book Now →
                 </Button>
               </div>
             </div>

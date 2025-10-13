@@ -45,14 +45,18 @@ export default function FleetSection() {
   };
 
   return (
-    <section id="fleet" className="py-16 md:py-24 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 font-heading">
-            Our Fleet
+    <section id="fleet" className="py-16 md:py-24 bg-gradient-to-br from-background to-muted/20 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 font-heading">
+            Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">Perfect Vehicle</span>
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choose from our range of well-maintained vehicles for your comfortable journey
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            From city runs to highway adventures - <span className="text-primary font-bold">spotlessly clean</span>, expertly maintained, always ready for your next journey
           </p>
         </div>
 

@@ -17,35 +17,56 @@ export default function FloatingContactButtons() {
     window.location.href = 'tel:9787099804';
   };
 
+
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
-      <Button
-        size="icon"
-        className="h-14 w-14 rounded-full shadow-lg bg-[#25D366] hover:bg-[#20BD5A] text-white animate-float"
-        style={{ animationDelay: '0s' }}
-        onClick={handleWhatsApp}
-        data-testid="button-whatsapp-float"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
-      <Button
-        size="icon"
-        className="h-14 w-14 rounded-full shadow-lg bg-[#0088cc] hover:bg-[#006ba3] text-white animate-float"
-        style={{ animationDelay: '0.2s' }}
-        onClick={handleTelegram}
-        data-testid="button-telegram-float"
-      >
-        <Send className="h-6 w-6" />
-      </Button>
-      <Button
-        size="icon"
-        className="h-14 w-14 rounded-full shadow-lg animate-float"
-        style={{ animationDelay: '0.4s' }}
-        onClick={handleCall}
-        data-testid="button-call-float"
-      >
-        <Phone className="h-6 w-6" />
-      </Button>
+    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-4">
+      {/* Always Visible Contact Icons */}
+      
+      {/* WhatsApp */}
+      <div className="flex items-center gap-3 group">
+        <span className="bg-background/95 backdrop-blur-sm text-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          WhatsApp
+        </span>
+        <Button
+          size="icon"
+          className="h-12 w-12 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors shadow-lg"
+          onClick={handleWhatsApp}
+          data-testid="button-whatsapp-float"
+        >
+          <MessageCircle className="h-6 w-6" fill="white" />
+        </Button>
+      </div>
+
+      {/* Telegram */}
+      <div className="flex items-center gap-3 group">
+        <span className="bg-background/95 backdrop-blur-sm text-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          Telegram
+        </span>
+        <Button
+          size="icon"
+          className="h-12 w-12 rounded-full bg-sky-500 hover:bg-sky-600 text-white transition-colors shadow-lg"
+          onClick={handleTelegram}
+          data-testid="button-telegram-float"
+        >
+          <Send className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Call Now */}
+      <div className="flex items-center gap-3 group">
+        <span className="bg-background/95 backdrop-blur-sm text-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          Call Now
+        </span>
+        <Button
+          size="icon"
+          className="h-12 w-12 rounded-full bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-lg"
+          onClick={handleCall}
+          data-testid="button-call-float"
+        >
+          <Phone className="h-6 w-6" />
+        </Button>
+      </div>
+
     </div>
   );
 }
