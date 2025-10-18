@@ -15,12 +15,16 @@ function Router() {
   );
 }
 
+import { BookingFormProvider } from "@/lib/BookingFormContext";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <BookingFormProvider>
+          <Toaster />
+          <Router />
+        </BookingFormProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

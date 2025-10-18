@@ -15,9 +15,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
           {/* Company Info */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4">
               <span className="text-4xl">🚖</span>
               <h3 className="text-2xl font-bold font-heading">Navi Drop Taxi</h3>
+              {/* <img src="./logo.png" alt="logo" className='w-[10rem] object-contain'/> */}
             </div>
             <p className="text-white/80 mb-6 leading-relaxed">
               Your trusted partner for safe & hassle-free travel in Thiruvannamalai District. 

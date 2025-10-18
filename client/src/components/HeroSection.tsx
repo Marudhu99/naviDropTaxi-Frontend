@@ -1,14 +1,79 @@
 import { useState, useEffect } from 'react';
+import { useRef } from 'react';
 import { MapPin, Calendar, Clock, Car, Users, Award, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+import { useBookingForm } from '@/lib/BookingFormContext';
+
 export default function HeroSection() {
   const [pickup, setPickup] = useState('');
   const [dropoff, setDropoff] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [pickupSuggestions, setPickupSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+  const [dropoffSuggestions, setDropoffSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+  const pickupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dropoffDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Fetch location suggestions
+  const fetchLocationSuggestions = async (query: string, setter: (s: any[]) => void) => {
+    if (!query || query.length < 2) {
+      setter([]);
+      return;
+    }
+    try {
+      const url = `/api/location-suggest?q=${encodeURIComponent(query)}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        setter([]);
+        return;
+      }
+      const data = await res.json();
+      setter(
+        data.map((d: any) => ({
+          display_name: d.display_name,
+          lat: d.lat,
+          lon: d.lon,
+        }))
+      );
+    } catch (err) {
+      setter([]);
+    }
+  };
+
+  // Debounced handlers
+  const handlePickupChange = (value: string) => {
+    setPickup(value);
+    setPickupSuggestions([]);
+    if (pickupDebounceRef.current) clearTimeout(pickupDebounceRef.current);
+    pickupDebounceRef.current = setTimeout(() => {
+      fetchLocationSuggestions(value, setPickupSuggestions);
+    }, 300);
+  };
+  const handleDropoffChange = (value: string) => {
+    setDropoff(value);
+    setDropoffSuggestions([]);
+    if (dropoffDebounceRef.current) clearTimeout(dropoffDebounceRef.current);
+    dropoffDebounceRef.current = setTimeout(() => {
+      fetchLocationSuggestions(value, setDropoffSuggestions);
+    }, 300);
+  };
+  const choosePickupSuggestion = (s: { display_name: string; lat: string; lon: string }) => {
+    setPickup(s.display_name);
+    setPickupSuggestions([]);
+  };
+  const chooseDropoffSuggestion = (s: { display_name: string; lat: string; lon: string }) => {
+    setDropoff(s.display_name);
+    setDropoffSuggestions([]);
+  };
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [time, setTime] = useState<{ hour: string; minute: string; period: 'AM' | 'PM' }>({ hour: '', minute: '', period: 'AM' });
+  const { setData } = useBookingForm();
   const [ridesCompleted, setRidesCompleted] = useState(0);
   const [happyCustomers, setHappyCustomers] = useState(0);
   const [yearsExperience, setYearsExperience] = useState(0);
@@ -47,7 +112,9 @@ export default function HeroSection() {
   }, []);
 
   const handleQuickBook = () => {
-    console.log('Quick booking:', { pickup, dropoff, date, time });
+  const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+  const timeStr = time.hour && time.minute ? `${time.hour}:${time.minute} ${time.period}` : '';
+  setData({ pickup, dropoff, date: dateStr, time: timeStr });
     const bookingSection = document.getElementById('booking');
     if (bookingSection) {
       bookingSection.scrollIntoView({ behavior: 'smooth' });
@@ -58,9 +125,9 @@ export default function HeroSection() {
     <section id="home" className="relative min-h-[85vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* High-quality luxury car background image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-slow-zoom"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-slow-zoom -top-20" //added -top-20 to hide bottom part of car
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1555215695-3004980ad54e?q=80&w=2070')`,
+          backgroundImage: `url('./car.webp')`,
         }}
       />
       
@@ -155,10 +222,25 @@ export default function HeroSection() {
                 <Input
                   placeholder="Enter pickup location"
                   value={pickup}
-                  onChange={(e) => setPickup(e.target.value)}
+                  onChange={(e) => handlePickupChange(e.target.value)}
                   className="pl-12 bg-white/20 border-white/30 text-white placeholder:text-white/50 backdrop-blur-sm focus:bg-white/30 transition-all h-12"
                   data-testid="input-pickup"
+                  autoComplete="off"
                 />
+                {pickupSuggestions.length > 0 && (
+                  <ul className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg max-h-64 overflow-auto">
+                    {pickupSuggestions.map((s, idx) => (
+                      <li
+                        key={idx}
+                        className="px-3 py-2 hover:bg-muted cursor-pointer text-sm"
+                        onMouseDown={() => choosePickupSuggestion(s)}
+                        data-testid={`pickup-suggestion-${idx}`}
+                      >
+                        {s.display_name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -168,37 +250,92 @@ export default function HeroSection() {
                 <Input
                   placeholder="Enter drop location"
                   value={dropoff}
-                  onChange={(e) => setDropoff(e.target.value)}
+                  onChange={(e) => handleDropoffChange(e.target.value)}
                   className="pl-12 bg-white/20 border-white/30 text-white placeholder:text-white/50 backdrop-blur-sm focus:bg-white/30 transition-all h-12"
                   data-testid="input-dropoff"
+                  autoComplete="off"
                 />
+                {dropoffSuggestions.length > 0 && (
+                  <ul className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg max-h-64 overflow-auto">
+                    {dropoffSuggestions.map((s, idx) => (
+                      <li
+                        key={idx}
+                        className="px-3 py-2 hover:bg-muted cursor-pointer text-sm"
+                        onMouseDown={() => chooseDropoffSuggestion(s)}
+                        data-testid={`dropoff-suggestion-${idx}`}
+                      >
+                        {s.display_name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-white/90">Travel Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
-                <Input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="pl-12 bg-white/20 border-white/30 text-white backdrop-blur-sm focus:bg-white/30 transition-all h-12"
-                  data-testid="input-date"
-                />
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full pl-12 text-left font-normal bg-white/20 border-white/30 text-white placeholder:text-white/50 backdrop-blur-sm focus:bg-white/30 transition-all h-12", !date && "text-white/50")}
+                    data-testid="input-date"
+                  >
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white/90">Travel Time</label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 z-10" />
-                <Input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="pl-12 bg-white/20 border-white/30 text-white backdrop-blur-sm focus:bg-white/30 transition-all h-12"
-                  data-testid="input-time"
-                />
+              <label className="text-sm font-medium text-white/90 ">Travel Time</label>
+              <div className="flex gap-2">
+                <Select
+                  value={time.hour}
+                  onValueChange={(value) => setTime({ ...time, hour: value })}
+                >
+                  <SelectTrigger className="pl-12 bg-white/20 border-white/30 text-white backdrop-blur-sm focus:bg-white/30 transition-all h-12 ">
+                    <SelectValue placeholder="Hour" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((hour) => (
+                      <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={time.minute}
+                  onValueChange={(value) => setTime({ ...time, minute: value })}
+                >
+                  <SelectTrigger className="w-24 bg-white/20 border-white/30 text-white backdrop-blur-sm focus:bg-white/30 transition-all h-12">
+                    <SelectValue placeholder="Min" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['00', '15', '30', '45'].map((minute) => (
+                      <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={time.period}
+                  onValueChange={(value) => setTime({ ...time, period: value as 'AM' | 'PM' })}
+                >
+                  <SelectTrigger className="w-20 bg-white/20 border-white/30 text-white backdrop-blur-sm focus:bg-white/30 transition-all h-12">
+                    <SelectValue placeholder="AM/PM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AM">AM</SelectItem>
+                    <SelectItem value="PM">PM</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

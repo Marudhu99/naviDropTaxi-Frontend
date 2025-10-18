@@ -1,10 +1,18 @@
-import { useState, useRef } from 'react';
-import { MapPin, Calendar, Clock, User, Mail, Phone, CheckCircle, IndianRupee } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useBookingForm } from '@/lib/BookingFormContext';
+import { MapPin, Calendar, Clock, User, Mail, Phone, CheckCircle, IndianRupee, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { toast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type Suggestion = {
   display_name: string;
@@ -26,10 +34,11 @@ const vehicles = [
 
 export default function BookingForm() {
   const [step, setStep] = useState(1);
+  const { data: contextData } = useBookingForm();
 
   // location inputs
-  const [pickup, setPickup] = useState('');
-  const [dropoff, setDropoff] = useState('');
+  const [pickup, setPickup] = useState(contextData.pickup || '');
+  const [dropoff, setDropoff] = useState(contextData.dropoff || '');
 
   // coords for automatic distance calculation
   const [pickupCoords, setPickupCoords] = useState<Coords | null>(null);
@@ -40,13 +49,74 @@ export default function BookingForm() {
   const [dropoffSuggestions, setDropoffSuggestions] = useState<Suggestion[]>([]);
 
   // other fields
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [date, setDate] = useState<Date | undefined>(contextData.date ? new Date(contextData.date) : undefined);
+  const [time, setTime] = useState<{ hour: string; minute: string; period: 'AM' | 'PM' }>(() => {
+    if (contextData.time) {
+      const match = contextData.time.match(/(\d{2}):(\d{2}) ?(AM|PM)?/);
+      if (match) {
+        return {
+          hour: match[1],
+          minute: match[2],
+          period: (match[3] as 'AM' | 'PM') || 'AM',
+        };
+      }
+    }
+    return { hour: '', minute: '', period: 'AM' };
+  });
   const [vehicleType, setVehicleType] = useState('');
   const [distance, setDistance] = useState(''); // km as string
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Sync context data on change
+  useEffect(() => {
+    if (contextData.pickup) setPickup(contextData.pickup);
+    if (contextData.dropoff) setDropoff(contextData.dropoff);
+    if (contextData.date) setDate(new Date(contextData.date));
+    if (contextData.time) {
+      const match = contextData.time.match(/(\d{2}):(\d{2}) ?(AM|PM)?/);
+      if (match) {
+        setTime({ hour: match[1], minute: match[2], period: (match[3] as 'AM' | 'PM') || 'AM' });
+      }
+    }
+  }, [contextData]);
+
+  // Validation function
+  const validateField = (field: string, value: any) => {
+    switch (field) {
+      case 'pickup':
+        if (!value) return 'Pickup location is required';
+        break;
+      case 'dropoff':
+        if (!value) return 'Drop location is required';
+        break;
+      case 'date':
+        if (!value) return 'Date is required';
+        break;
+      case 'time':
+        if (!value.hour || !value.minute) return 'Time is required';
+        break;
+      case 'vehicleType':
+        if (!value) return 'Vehicle type is required';
+        break;
+      case 'name':
+        if (!value) return 'Name is required';
+        if (value.length < 3) return 'Name must be at least 3 characters';
+        break;
+      case 'mobile':
+        if (!value) return 'Mobile number is required';
+        if (!/^[6-9]\d{9}$/.test(value)) return 'Enter a valid 10-digit mobile number';
+        break;
+      case 'email':
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address';
+        break;
+    }
+    return '';
+  };
 
   const pickupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropoffDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,26 +144,19 @@ export default function BookingForm() {
 
   // simple fetch to OpenStreetMap Nominatim
   const fetchLocationSuggestions = async (query: string, setter: (s: Suggestion[]) => void) => {
-    if (!query || query.length < 2) {
-      setter([]);
-      return;
-    }
+    if (query.length < 2) return;
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=${encodeURIComponent(query)}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        setter([]);
-        return;
-      }
+      const res = await fetch(`/api/location-suggest?q=${encodeURIComponent(query)}`);
       const data = await res.json();
-      setter(
-        data.map((d: any) => ({
-          display_name: d.display_name,
-          lat: d.lat,
-          lon: d.lon,
-        }))
-      );
+      
+      const suggestions = data.map((item: any) => ({
+        ...item,
+        display_name: item.display_name.replace(/, India$/, '')
+      }));
+
+      setter(suggestions);
     } catch (err) {
+      console.error('Error fetching suggestions:', err);
       setter([]);
     }
   };
@@ -102,7 +165,6 @@ export default function BookingForm() {
   const handlePickupChange = (value: string) => {
     setPickup(value);
     setPickupSuggestions([]);
-    // clear coords and auto distance when user changes text
     setPickupCoords(null);
     setDistance('');
     if (pickupDebounceRef.current) clearTimeout(pickupDebounceRef.current);
@@ -114,7 +176,6 @@ export default function BookingForm() {
   const handleDropoffChange = (value: string) => {
     setDropoff(value);
     setDropoffSuggestions([]);
-    // clear coords and auto distance when user changes text
     setDropoffCoords(null);
     setDistance('');
     if (dropoffDebounceRef.current) clearTimeout(dropoffDebounceRef.current);
@@ -128,11 +189,9 @@ export default function BookingForm() {
     setPickupSuggestions([]);
     const coords = { lat: parseFloat(s.lat), lon: parseFloat(s.lon) };
     setPickupCoords(coords);
-    // if dropoff coords exist, auto-calc distance
     if (dropoffCoords) {
       setDistanceFromCoords(coords, dropoffCoords);
     }
-    // optionally store coordinates: s.lat, s.lon
   };
 
   const chooseDropoffSuggestion = (s: Suggestion) => {
@@ -140,32 +199,44 @@ export default function BookingForm() {
     setDropoffSuggestions([]);
     const coords = { lat: parseFloat(s.lat), lon: parseFloat(s.lon) };
     setDropoffCoords(coords);
-    // if pickup coords exist, auto-calc distance
     if (pickupCoords) {
       setDistanceFromCoords(pickupCoords, coords);
     }
-    // optionally store coordinates: s.lat, s.lon
   };
 
-  const handleNextStep = () => {
-    if (step === 1 && pickup && dropoff && date && time && vehicleType) {
-      setStep(2);
-    } else if (step === 2 && name && mobile) {
-      handleSubmit();
+  const handleSubmit = async () => {
+    setLoading(true);
+    // Use a local copy for eval to work correctly in the validation loop
+    const localData = { pickup, dropoff, date, time, vehicleType, name, mobile, email };
+    
+    // Validate all fields
+    const newErrors: { [key: string]: string } = {};
+    ['pickup', 'dropoff', 'date', 'time', 'vehicleType', 'name', 'mobile', 'email'].forEach(field => {
+      const error = validateField(field, localData[field as keyof typeof localData]);
+      if (error) {
+        newErrors[field] = error;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setLoading(false);
+      return;
     }
-  };
 
-  const handleSubmit = () => {
+    // Format time for message
+    const formattedTime = `${time.hour}:${time.minute} ${time.period}`;
+
     const bookingDetails = `
 🚖 *New Booking Request*
 
 📍 Pickup: ${pickup}
 📍 Drop: ${dropoff}
-📅 Date: ${date}
-⏰ Time: ${time}
+📅 Date: ${date ? format(date, "PPP") : ''}
+⏰ Time: ${formattedTime}
 🚗 Vehicle: ${selectedVehicle?.name}
 📏 Estimated Distance: ${distance} km
-💰 Estimated Fare: ₹${estimatedFare}
+💰 Estimated Fare: ₹${estimatedFare.toFixed(2)}
 
 👤 Customer Details:
 Name: ${name}
@@ -173,11 +244,71 @@ Mobile: ${mobile}
 ${email ? `Email: ${email}` : ''}
     `.trim();
 
+    // Send WhatsApp and email in parallel
     const message = encodeURIComponent(bookingDetails);
-    window.open(`https://wa.me/919787099804?text=${message}`, '_blank');
+    const whatsappPromise = Promise.resolve(window.open(`https://wa.me/919787099804?text=${message}`, '_blank'));
+    const emailPromise = fetch('/api/send-booking-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pickup,
+        dropoff,
+        date: date ? format(date, 'yyyy-MM-dd') : '',
+        time: formattedTime,
+        vehicleType: selectedVehicle?.name || '',
+        distance,
+        name,
+        mobile,
+        email,
+        estimatedFare: estimatedFare.toFixed(2)
+      })
+    });
 
+    let emailSuccess = false;
+    try {
+      const emailResponse = await emailPromise;
+      if (emailResponse.ok) {
+        emailSuccess = true;
+      } else {
+        console.error("Email API responded with an error:", await emailResponse.text());
+        toast({ title: 'Email Error', description: 'Failed to send booking email notice.' });
+      }
+      await whatsappPromise;
+    } catch (err) {
+      console.error("Error during submission:", err);
+      toast({ title: 'Submission Error', description: 'Could not complete the booking process.' });
+    }
+
+    setLoading(false);
     setStep(3);
+    
+    toast({
+        title: 'Booking Request Sent! 🎉',
+        description: 'Your request was sent. We will contact you shortly to confirm.',
+        variant: 'default',
+        duration: 5000,
+    });
   };
+  
+  const resetForm = () => {
+    setStep(1);
+    setPickup('');
+    setDropoff('');
+    setDate(undefined);
+    setTime({ hour: '', minute: '', period: 'AM' });
+    setVehicleType('');
+    setDistance('');
+    setName('');
+    setMobile('');
+    setEmail('');
+    setPickupSuggestions([]);
+    setDropoffSuggestions([]);
+    setPickupCoords(null);
+    setDropoffCoords(null);
+    setErrors({});
+    setShowConfirmDialog(false);
+  };
+
 
   return (
     <section id="booking" className="py-16 md:py-24 bg-gradient-to-b from-background to-card relative overflow-hidden">
@@ -259,116 +390,175 @@ ${email ? `Email: ${email}` : ''}
             {step === 1 && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 relative">
-                    <Label htmlFor="pickup">Pickup Location *</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="pickup"
-                        placeholder="Enter pickup location"
-                        value={pickup}
-                        onChange={(e) => handlePickupChange(e.target.value)}
-                        className="pl-10"
-                        data-testid="input-pickup-booking"
-                        autoComplete="off"
-                      />
-                    </div>
+                   <div className="space-y-2 relative">
+                     <Label htmlFor="pickup" className="flex gap-1">
+                       Pickup Location <span className="text-destructive">*</span>
+                       {errors.pickup && <span className="text-destructive text-sm ml-1">({errors.pickup})</span>}
+                     </Label>
+                     <div className="relative">
+                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       <Input
+                         id="pickup"
+                         placeholder="Enter pickup location"
+                         value={pickup}
+                         onChange={(e) => {
+                           handlePickupChange(e.target.value);
+                           setErrors({ ...errors, pickup: validateField('pickup', e.target.value) });
+                         }}
+                         className={cn("pl-10", errors.pickup && "border-destructive")}
+                         autoComplete="off"
+                       />
+                     </div>
 
-                    {pickupSuggestions.length > 0 && (
-                      <ul className="absolute z-50 mt-1 w-full bg-white dark:bg-card border rounded-md shadow-lg max-h-64 overflow-auto">
-                        {pickupSuggestions.map((s, idx) => (
-                          <li
-                            key={idx}
-                            className="px-3 py-2 hover:bg-muted cursor-pointer text-sm"
-                            onMouseDown={() => choosePickupSuggestion(s)}
-                            data-testid={`pickup-suggestion-${idx}`}
-                          >
-                            {s.display_name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                     {pickupSuggestions.length > 0 && (
+                       <ul className="absolute z-50 mt-1 w-full bg-white dark:bg-card border rounded-md shadow-lg max-h-64 overflow-auto">
+                         {pickupSuggestions.map((s, idx) => (
+                           <li
+                             key={idx}
+                             className="px-3 py-2 hover:bg-muted cursor-pointer text-sm"
+                             onMouseDown={() => choosePickupSuggestion(s)}
+                           >
+                             {s.display_name}
+                           </li>
+                         ))}
+                       </ul>
+                     )}
+                   </div>
 
-                  <div className="space-y-2 relative">
-                    <Label htmlFor="dropoff">Drop Location *</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="dropoff"
-                        placeholder="Enter drop location"
-                        value={dropoff}
-                        onChange={(e) => handleDropoffChange(e.target.value)}
-                        className="pl-10"
-                        data-testid="input-dropoff-booking"
-                        autoComplete="off"
-                      />
-                    </div>
+                   <div className="space-y-2 relative">
+                     <Label htmlFor="dropoff" className="flex gap-1">
+                       Drop Location <span className="text-destructive">*</span>
+                       {errors.dropoff && <span className="text-destructive text-sm ml-1">({errors.dropoff})</span>}
+                     </Label>
+                     <div className="relative">
+                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       <Input
+                         id="dropoff"
+                         placeholder="Enter drop location"
+                         value={dropoff}
+                         onChange={(e) => {
+                           handleDropoffChange(e.target.value);
+                           setErrors({ ...errors, dropoff: validateField('dropoff', e.target.value) });
+                         }}
+                         className={cn("pl-10", errors.dropoff && "border-destructive")}
+                         autoComplete="off"
+                       />
+                     </div>
+                     {dropoffSuggestions.length > 0 && (
+                       <ul className="absolute z-50 mt-1 w-full bg-white dark:bg-card border rounded-md shadow-lg max-h-64 overflow-auto">
+                         {dropoffSuggestions.map((s, idx) => (
+                           <li
+                             key={idx}
+                             className="px-3 py-2 hover:bg-muted cursor-pointer text-sm"
+                             onMouseDown={() => chooseDropoffSuggestion(s)}
+                           >
+                             {s.display_name}
+                           </li>
+                         ))}
+                       </ul>
+                     )}
+                   </div>
 
-                    {dropoffSuggestions.length > 0 && (
-                      <ul className="absolute z-50 mt-1 w-full bg-white dark:bg-card border rounded-md shadow-lg max-h-64 overflow-auto">
-                        {dropoffSuggestions.map((s, idx) => (
-                          <li
-                            key={idx}
-                            className="px-3 py-2 hover:bg-muted cursor-pointer text-sm"
-                            onMouseDown={() => chooseDropoffSuggestion(s)}
-                            data-testid={`dropoff-suggestion-${idx}`}
-                          >
-                            {s.display_name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                   <div className="space-y-2">
+                     <Label htmlFor="date" className="flex gap-1">
+                       Travel Date <span className="text-destructive">*</span>
+                       {errors.date && <span className="text-destructive text-sm ml-1">({errors.date})</span>}
+                     </Label>
+                     <Popover>
+                       <PopoverTrigger asChild>
+                         <Button
+                           id="date"
+                           variant="outline"
+                           className={cn(
+                             "w-full pl-10 text-left font-normal",
+                             !date && "text-muted-foreground",
+                             errors.date && "border-destructive"
+                           )}
+                         >
+                           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                           {date ? format(date, "PPP") : <span>Pick a date</span>}
+                         </Button>
+                       </PopoverTrigger>
+                       <PopoverContent className="w-auto p-0" align="start">
+                         <CalendarComponent
+                           mode="single"
+                           selected={date}
+                           onSelect={setDate}
+                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                           initialFocus
+                         />
+                       </PopoverContent>
+                     </Popover>
+                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Travel Date *</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="date"
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="pl-10"
-                        data-testid="input-date-booking"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="time">Travel Time *</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="time"
-                        type="time"
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        className="pl-10"
-                        data-testid="input-time-booking"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="distance">Estimated Distance (km)</Label>
-                    <Input
-                      id="distance"
-                      type="number"
-                      placeholder="Automatically calculated when both locations are selected"
-                      value={distance}
-                      onChange={(e) => setDistance(e.target.value)}
-                      data-testid="input-distance"
-                    />
-                  </div>
-                </div>
+                   <div className="space-y-2">
+                     <Label className="flex gap-1">
+                       Travel Time <span className="text-destructive">*</span>
+                       {errors.time && <span className="text-destructive text-sm ml-1">({errors.time})</span>}
+                     </Label>
+                     <div className="flex gap-2">
+                       <div className="relative flex-1">
+                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                         <Select
+                           value={time.hour}
+                           onValueChange={(value) => setTime({ ...time, hour: value })}
+                         >
+                           <SelectTrigger className={cn("pl-10", errors.time && "border-destructive")}>
+                             <SelectValue placeholder="Hour" />
+                           </SelectTrigger>
+                           <SelectContent>
+                             {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((hour) => (
+                               <SelectItem key={hour} value={hour}>{hour}</SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       <Select
+                         value={time.minute}
+                         onValueChange={(value) => setTime({ ...time, minute: value })}
+                       >
+                         <SelectTrigger className={cn("w-24", errors.time && "border-destructive")}>
+                           <SelectValue placeholder="Min" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {['00', '15', '30', '45'].map((minute) => (
+                             <SelectItem key={minute} value={minute}>{minute}</SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                       <Select
+                         value={time.period}
+                         onValueChange={(value) => setTime({ ...time, period: value as 'AM' | 'PM' })}
+                       >
+                         <SelectTrigger className={cn("w-20", errors.time && "border-destructive")}>
+                           <SelectValue placeholder="AM/PM" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="AM">AM</SelectItem>
+                           <SelectItem value="PM">PM</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                   </div>
+
+                   <div className="space-y-2 md:col-span-2">
+                     <Label htmlFor="distance">Estimated Distance (km)</Label>
+                     <Input
+                       id="distance"
+                       type="number"
+                       placeholder="Automatically calculated when both locations are selected"
+                       value={distance}
+                       onChange={(e) => setDistance(e.target.value)}
+                     />
+                   </div>
+                 </div>
 
                 <div className="space-y-3">
                   <Label>Select Vehicle Type *</Label>
                   <RadioGroup value={vehicleType} onValueChange={setVehicleType}>
                     {vehicles.map((vehicle) => (
                       <div key={vehicle.id} className="flex items-center space-x-3 border rounded-md p-4 hover-elevate">
-                        <RadioGroupItem value={vehicle.id} id={vehicle.id} data-testid={`radio-${vehicle.id}`} />
+                        <RadioGroupItem value={vehicle.id} id={vehicle.id} />
                         <Label htmlFor={vehicle.id} className="flex-1 cursor-pointer">
                           <div className="flex items-center justify-between">
                             <div>
@@ -392,7 +582,6 @@ ${email ? `Email: ${email}` : ''}
                       <IndianRupee className="w-5 h-5 text-primary" />
                       <span>Price Breakdown</span>
                     </h4>
-
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Base Rate</span>
@@ -407,11 +596,10 @@ ${email ? `Email: ${email}` : ''}
                         <span className="text-lg font-semibold">Estimated Total:</span>
                         <div className="flex items-center gap-1 text-3xl font-bold text-primary pulse-glow">
                           <IndianRupee className="w-7 h-7" />
-                          <span data-testid="text-estimated-fare">{estimatedFare}</span>
+                          <span>{estimatedFare.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
-
                     <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 flex items-start gap-2">
                       <div className="text-yellow-600 mt-0.5">ℹ️</div>
                       <p className="text-xs text-yellow-700 dark:text-yellow-300">
@@ -424,10 +612,27 @@ ${email ? `Email: ${email}` : ''}
                 <Button
                   className="w-full btn-ripple bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
                   size="lg"
-                  onClick={handleNextStep}
-                  disabled={!pickup || !dropoff || !date || !time || !vehicleType}
-                  data-testid="button-next-step-1"
+                  onClick={() => {
+                    const newErrors: { [key: string]: string } = {};
+                    const fieldsToValidate = ['pickup', 'dropoff', 'date', 'time', 'vehicleType'];
+                    const localData = { pickup, dropoff, date, time, vehicleType };
+
+                    fieldsToValidate.forEach(field => {
+                      const error = validateField(field, localData[field as keyof typeof localData]);
+                      if (error) {
+                        newErrors[field] = error;
+                      }
+                    });
+
+                    if (Object.keys(newErrors).length > 0) {
+                      setErrors(newErrors);
+                      return;
+                    }
+                    setStep(2);
+                  }}
+                  disabled={loading || !pickup || !dropoff || !date || !time.hour || !time.minute || !vehicleType}
                 >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Get Instant Quote →
                 </Button>
               </>
@@ -437,21 +642,29 @@ ${email ? `Email: ${email}` : ''}
               <>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
+                    <Label htmlFor="name" className="flex gap-1">
+                      Full Name <span className="text-destructive">*</span>
+                      {errors.name && <span className="text-destructive text-sm ml-1">({errors.name})</span>}
+                    </Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="name"
                         placeholder="Enter your full name"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="pl-10"
-                        data-testid="input-name"
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          setErrors({ ...errors, name: validateField('name', e.target.value) });
+                        }}
+                        className={cn("pl-10", errors.name && "border-destructive")}
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile Number *</Label>
+                    <Label htmlFor="mobile" className="flex gap-1">
+                      Mobile Number <span className="text-destructive">*</span>
+                      {errors.mobile && <span className="text-destructive text-sm ml-1">({errors.mobile})</span>}
+                    </Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -459,15 +672,20 @@ ${email ? `Email: ${email}` : ''}
                         type="tel"
                         placeholder="10-digit mobile number"
                         value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        maxLength={10}
-                        className="pl-10"
-                        data-testid="input-mobile"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setMobile(value);
+                          setErrors({ ...errors, mobile: validateField('mobile', value) });
+                        }}
+                        className={cn("pl-10", errors.mobile && "border-destructive")}
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address (Optional)</Label>
+                    <Label htmlFor="email" className="flex gap-1">
+                      Email Address <span className="text-muted-foreground">(Optional)</span>
+                      {errors.email && <span className="text-destructive text-sm ml-1">({errors.email})</span>}
+                    </Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -475,9 +693,16 @@ ${email ? `Email: ${email}` : ''}
                         type="email"
                         placeholder="your@email.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        data-testid="input-email"
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (e.target.value) {
+                            setErrors({ ...errors, email: validateField('email', e.target.value) });
+                          } else {
+                            const { email, ...rest } = errors;
+                            setErrors(rest);
+                          }
+                        }}
+                        className={cn("pl-10", errors.email && "border-destructive")}
                       />
                     </div>
                   </div>
@@ -489,17 +714,16 @@ ${email ? `Email: ${email}` : ''}
                     className="flex-1 border-2 hover:bg-muted"
                     size="lg"
                     onClick={() => setStep(1)}
-                    data-testid="button-back"
                   >
                     ← Back
                   </Button>
                   <Button
                     className="flex-2 md:flex-1 btn-ripple bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold shadow-lg hover:shadow-xl transition-all"
                     size="lg"
-                    onClick={handleNextStep}
-                    disabled={!name || !mobile || mobile.length !== 10}
-                    data-testid="button-confirm-booking"
+                    onClick={handleSubmit}
+                    disabled={loading || !name || !mobile || mobile.length !== 10}
                   >
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Book My Ride Now! →
                   </Button>
                 </div>
@@ -543,11 +767,11 @@ ${email ? `Email: ${email}` : ''}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-primary" />
-                        <span>{date}</span>
+                        <span>{date ? format(date, "PPP") : ''}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-primary" />
-                        <span>{time}</span>
+                        <span>{time.hour && time.minute ? `${time.hour}:${time.minute} ${time.period}` : ''}</span>
                       </div>
                     </div>
                     <div className="h-px bg-border" />
@@ -559,32 +783,16 @@ ${email ? `Email: ${email}` : ''}
                       <span className="font-semibold">Estimated Fare</span>
                       <span className="text-2xl font-bold text-green-600 flex items-center">
                         <IndianRupee className="w-5 h-5" />
-                        {estimatedFare}
+                        {estimatedFare.toFixed(2)}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <Button
-                  onClick={() => {
-                    setStep(1);
-                    setPickup('');
-                    setDropoff('');
-                    setDate('');
-                    setTime('');
-                    setVehicleType('');
-                    setDistance('');
-                    setName('');
-                    setMobile('');
-                    setEmail('');
-                    setPickupSuggestions([]);
-                    setDropoffSuggestions([]);
-                    setPickupCoords(null);
-                    setDropoffCoords(null);
-                  }}
+                  onClick={resetForm}
+                  className="btn-ripple bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
                   size="lg"
-                  className="btn-ripple bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white font-bold shadow-lg"
-                  data-testid="button-new-booking"
                 >
                   Plan Another Journey →
                 </Button>
@@ -593,6 +801,37 @@ ${email ? `Email: ${email}` : ''}
           </CardContent>
         </Card>
       </div>
+
+      {/* This dialog is available if you want to add a confirmation step in the future */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Your Booking</DialogTitle>
+            <DialogDescription>
+              Please review your booking details before confirming.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+             {/* Summary details here... */}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Back
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

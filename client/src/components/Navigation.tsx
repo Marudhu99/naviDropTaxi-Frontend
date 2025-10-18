@@ -41,7 +41,8 @@ export default function Navigation() {
               <h1 className={`text-xl md:text-2xl font-bold font-heading transition-all duration-300 ${
                 isScrolled ? 'text-foreground' : 'text-white drop-shadow-lg'
               }`}>
-                <span className="text-primary text-2xl md:text-3xl">🚖</span> Navi Drop Taxi
+                 <span className="text-4xl">🚖</span>
+                Navi Drop Taxi
               </h1>
             </div>
 
