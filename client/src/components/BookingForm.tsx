@@ -813,6 +813,7 @@ ${email ? `Email: ${email}` : ''}
           </DialogHeader>
           <div className="space-y-4">
              {/* Summary details here... */}
+             
           </div>
           <DialogFooter>
             <Button
