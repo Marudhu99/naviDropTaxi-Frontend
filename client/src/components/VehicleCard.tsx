@@ -66,9 +66,9 @@ export default function VehicleCard({
           alt={name}
           className="w-full h-full object-cover transition-transform duration-500"
         />
-        <Badge className="absolute top-4 left-4 bg-secondary/90 text-white backdrop-blur-sm border-white/20 z-10">
+        <div className="absolute top-4 left-4 bg-secondary/90 text-white backdrop-blur-sm border-white/20 z-10 px-2.5 py-0.5 text-xs font-semibold rounded-md border">
           {type}
-        </Badge>
+        </div>
         {/* Gradient overlay that appears on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
