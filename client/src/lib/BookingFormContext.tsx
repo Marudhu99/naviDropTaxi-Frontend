@@ -5,6 +5,9 @@ export type BookingFormData = {
   dropoff: string;
   date: string;
   time: string;
+  distance?: string;
+  tripType?: 'one-way' | 'round-trip';
+  returnDate?: string;
 };
 
 const BookingFormContext = createContext<{
@@ -18,6 +21,9 @@ export const BookingFormProvider = ({ children }: { children: React.ReactNode })
     dropoff: '',
     date: '',
     time: '',
+    distance: '',
+    tripType: 'one-way',
+    returnDate: '',
   });
   return (
     <BookingFormContext.Provider value={{ data, setData }}>

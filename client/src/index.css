@@ -669,3 +669,8 @@
     @apply bg-blue-200 border-blue-300 scale-105;
   }
 }
+
+::selection {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}

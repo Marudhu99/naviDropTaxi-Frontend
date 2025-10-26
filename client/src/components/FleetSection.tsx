@@ -7,7 +7,7 @@ const vehicles = [
     capacity: '4 Passengers + Driver',
     models: 'Tata Indica, Swift Dzire',
     rate: 14,
-    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2070',
+    image: './Sedan.png',
   },
   {
     name: 'SUV',
@@ -15,7 +15,7 @@ const vehicles = [
     capacity: '6 Passengers + Driver',
     models: 'Mahindra Xylo, Chevrolet Tavera',
     rate: 18,
-    image: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=2071',
+    image: './tavera.png',
   },
   {
     name: 'Innova Premium',
@@ -23,16 +23,16 @@ const vehicles = [
     capacity: '6 Passengers + Driver',
     models: 'Toyota Innova',
     rate: 19,
-    image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070',
+    image: './innova.png',
   },
-  {
-    name: 'MUV',
-    type: '7+1 Seater',
-    capacity: '7 Passengers + Driver',
-    models: 'Chevrolet Tavera',
-    rate: 18,
-    image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070',
-  },
+  // {
+  //   name: 'MUV',
+  //   type: '7+1 Seater',
+  //   capacity: '7 Passengers + Driver',
+  //   models: 'Chevrolet Tavera',
+  //   rate: 18,
+  //   image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=2070',
+  // },
 ];
 
 export default function FleetSection() {

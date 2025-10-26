@@ -38,12 +38,9 @@ export default function Navigation() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             <div className="flex-shrink-0">
-              <h1 className={`text-xl md:text-2xl font-bold font-heading transition-all duration-300 ${
-                isScrolled ? 'text-foreground' : 'text-white drop-shadow-lg'
-              }`}>
-                 <span className="text-4xl">🚖</span>
-                Navi Drop Taxi
-              </h1>
+          
+                <img src="./logo.png" alt="logo" className='w-[10rem] md:w-[15rem]' />
+              
             </div>
 
             <div className="hidden md:flex items-center gap-8">
@@ -85,8 +82,9 @@ export default function Navigation() {
               </button>
             </div>
 
-            <div className="hidden md:flex items-center gap-4">
-              <Button
+            <div className="flex items-center gap-4">
+              <div>
+                <Button
                 variant="outline"
                 size="default"
                 onClick={handleCall}
@@ -100,13 +98,16 @@ export default function Navigation() {
                 <Phone className="w-4 h-4" />
                 <span>9787099804</span>
               </Button>
-              <Button
+              </div>
+             <div className='hidden md:flex'>
+               <Button
                 onClick={() => scrollToSection('booking')}
                 className="btn-ripple bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                 data-testid="button-book-header"
               >
                 Book Now →
               </Button>
+             </div>
             </div>
 
             <button
@@ -153,7 +154,7 @@ export default function Navigation() {
                 Contact
               </button>
               <div className="pt-2 space-y-2">
-                <Button
+                {/* <Button
                   variant="outline"
                   className="w-full gap-2 border-2 font-semibold"
                   onClick={handleCall}
@@ -161,7 +162,7 @@ export default function Navigation() {
                 >
                   <Phone className="w-4 h-4" />
                   <span>9787099804</span>
-                </Button>
+                </Button> */}
                 <Button
                   className="w-full btn-ripple bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white font-bold"
                   onClick={() => scrollToSection('booking')}

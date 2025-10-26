@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, isDate } from 'date-fns';
+import { filterDistricts, haversineKm } from '@/lib/tn-districts';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -26,10 +27,10 @@ type Coords = {
 };
 
 const vehicles = [
-  { id: 'sedan', name: 'Sedan (4+1)', rate: 14, models: 'Indica, Swift Dzire' },
-  { id: 'suv', name: 'SUV (6+1)', rate: 18, models: 'Xylo, Tavera' },
-  { id: 'innova', name: 'Innova Premium (6+1)', rate: 19, models: 'Toyota Innova' },
-  { id: 'muv', name: 'MUV (7+1)', rate: 18, models: 'Tavera' },
+  { id: 'sedan', name: 'Sedan (4+1)', rate: 14, models: 'Indica, Swift Dzire', driverBata: { oneWay: 0, roundTrip: 400 } },
+  { id: 'suv', name: 'SUV (6+1)', rate: 18, models: 'Xylo, Tavera', driverBata: { oneWay: 0, roundTrip: 600 } },
+  { id: 'innova', name: 'Innova Premium (6+1)', rate: 19, models: 'Toyota Innova', driverBata: { oneWay: 0, roundTrip: 800 } },
+  // { id: 'muv', name: 'MUV (7+1)', rate: 18, models: 'Tavera' },
 ];
 
 export default function BookingForm() {
@@ -50,21 +51,22 @@ export default function BookingForm() {
 
   // other fields
   const [date, setDate] = useState<Date | undefined>(contextData.date ? new Date(contextData.date) : undefined);
-  const [time, setTime] = useState<{ hour: string; minute: string; period: 'AM' | 'PM' }>(() => {
+  const [returnDate, setReturnDate] = useState<Date | undefined>(contextData.returnDate ? new Date(contextData.returnDate) : undefined);
+  const [tripType, setTripType] = useState<'one-way' | 'round-trip'>(contextData.tripType || 'one-way');
+  const [time, setTime] = useState<{ hour: string; period: 'AM' | 'PM' }>(() => {
     if (contextData.time) {
       const match = contextData.time.match(/(\d{2}):(\d{2}) ?(AM|PM)?/);
       if (match) {
         return {
           hour: match[1],
-          minute: match[2],
           period: (match[3] as 'AM' | 'PM') || 'AM',
         };
       }
     }
-    return { hour: '', minute: '', period: 'AM' };
+    return { hour: '', period: 'AM' };
   });
   const [vehicleType, setVehicleType] = useState('');
-  const [distance, setDistance] = useState(''); // km as string
+  const [distance, setDistance] = useState(contextData.distance || ''); // km as string
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
@@ -77,12 +79,15 @@ export default function BookingForm() {
     if (contextData.pickup) setPickup(contextData.pickup);
     if (contextData.dropoff) setDropoff(contextData.dropoff);
     if (contextData.date) setDate(new Date(contextData.date));
+    if (contextData.returnDate) setReturnDate(new Date(contextData.returnDate));
+    if (contextData.tripType) setTripType(contextData.tripType);
     if (contextData.time) {
       const match = contextData.time.match(/(\d{2}):(\d{2}) ?(AM|PM)?/);
       if (match) {
-        setTime({ hour: match[1], minute: match[2], period: (match[3] as 'AM' | 'PM') || 'AM' });
+        setTime({ hour: match[1], period: (match[3] as 'AM' | 'PM') || 'AM' });
       }
     }
+    if (contextData.distance) setDistance(contextData.distance);
   }, [contextData]);
 
   // Validation function
@@ -97,8 +102,12 @@ export default function BookingForm() {
       case 'date':
         if (!value) return 'Date is required';
         break;
+      case 'returnDate':
+        if (tripType === 'round-trip' && !value) return 'Return date is required for round trip';
+        if (tripType === 'round-trip' && value && date && value <= date) return 'Return date must be after pickup date';
+        break;
       case 'time':
-        if (!value.hour || !value.minute) return 'Time is required';
+        if (!value.hour) return 'Time is required';
         break;
       case 'vehicleType':
         if (!value) return 'Vehicle type is required';
@@ -122,7 +131,9 @@ export default function BookingForm() {
   const dropoffDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selectedVehicle = vehicles.find(v => v.id === vehicleType);
-  const estimatedFare = selectedVehicle && distance ? selectedVehicle.rate * parseFloat(distance) : 0;
+  const baseFare = selectedVehicle && distance ? selectedVehicle.rate * parseFloat(distance) : 0;
+  const driverBata = selectedVehicle && tripType === 'round-trip' ? selectedVehicle.driverBata.roundTrip : 0;
+  const estimatedFare = baseFare + driverBata;
 
   // Haversine distance in kilometers
   const computeDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -142,23 +153,15 @@ export default function BookingForm() {
     setDistance(km.toFixed(1)); // keep one decimal
   };
 
-  // simple fetch to OpenStreetMap Nominatim
-  const fetchLocationSuggestions = async (query: string, setter: (s: Suggestion[]) => void) => {
-    if (query.length < 2) return;
-    try {
-      const res = await fetch(`/api/location-suggest?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      
-      const suggestions = data.map((item: any) => ({
-        ...item,
-        display_name: item.display_name.replace(/, India$/, '')
-      }));
-
-      setter(suggestions);
-    } catch (err) {
-      console.error('Error fetching suggestions:', err);
-      setter([]);
-    }
+  // Tamil Nadu districts only suggestions
+  const fetchLocationSuggestions = (query: string, setter: (s: Suggestion[]) => void) => {
+    if (query.length < 1) return setter([]);
+    const results = filterDistricts(query).map(d => ({
+      display_name: d.name,
+      lat: String(d.lat),
+      lon: String(d.lon),
+    }));
+    setter(results);
   };
 
   // handlers with debounce
@@ -225,7 +228,7 @@ export default function BookingForm() {
     }
 
     // Format time for message
-    const formattedTime = `${time.hour}:${time.minute} ${time.period}`;
+    const formattedTime = `${time.hour}:00 ${time.period}`;
 
     const bookingDetails = `
 🚖 *New Booking Request*
@@ -233,10 +236,13 @@ export default function BookingForm() {
 📍 Pickup: ${pickup}
 📍 Drop: ${dropoff}
 📅 Date: ${date ? format(date, "PPP") : ''}
+${tripType === 'round-trip' && returnDate ? `📅 Return Date: ${format(returnDate, "PPP")}` : ''}
 ⏰ Time: ${formattedTime}
 🚗 Vehicle: ${selectedVehicle?.name}
 📏 Estimated Distance: ${distance} km
-💰 Estimated Fare: ₹${estimatedFare.toFixed(2)}
+💰 Base Fare: ₹${baseFare.toFixed(2)}
+${driverBata > 0 ? `💰 Driver Bata: ₹${driverBata}` : ''}
+💰 Total Estimated Fare: ₹${estimatedFare.toFixed(2)}
 
 👤 Customer Details:
 Name: ${name}
@@ -254,12 +260,16 @@ ${email ? `Email: ${email}` : ''}
         pickup,
         dropoff,
         date: date ? format(date, 'yyyy-MM-dd') : '',
+        returnDate: returnDate ? format(returnDate, 'yyyy-MM-dd') : '',
+        tripType,
         time: formattedTime,
         vehicleType: selectedVehicle?.name || '',
         distance,
         name,
         mobile,
         email,
+        baseFare: baseFare.toFixed(2),
+        driverBata: driverBata.toFixed(2),
         estimatedFare: estimatedFare.toFixed(2)
       })
     });
@@ -295,7 +305,9 @@ ${email ? `Email: ${email}` : ''}
     setPickup('');
     setDropoff('');
     setDate(undefined);
-    setTime({ hour: '', minute: '', period: 'AM' });
+    setReturnDate(undefined);
+    setTripType('one-way');
+    setTime({ hour: '', period: 'AM' });
     setVehicleType('');
     setDistance('');
     setName('');
@@ -389,6 +401,26 @@ ${email ? `Email: ${email}` : ''}
           <CardContent className="space-y-6 p-6 md:p-8">
             {step === 1 && (
               <>
+                <div className="space-y-4 mb-6">
+                  <Label className="text-lg font-semibold">I'm Looking For</Label>
+                  <RadioGroup value={tripType} onValueChange={(value) => {
+                    setTripType(value as 'one-way' | 'round-trip');
+                    if (value === 'one-way') {
+                      setReturnDate(undefined);
+                      setErrors({ ...errors, returnDate: '' });
+                    }
+                  }}>
+                    <div className="flex items-center space-x-3">
+                      <RadioGroupItem value="one-way" id="one-way" />
+                      <Label htmlFor="one-way" className="cursor-pointer text-lg">One Way</Label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <RadioGroupItem value="round-trip" id="round-trip" />
+                      <Label htmlFor="round-trip" className="cursor-pointer text-lg">Round Trip</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div className="space-y-2 relative">
                      <Label htmlFor="pickup" className="flex gap-1">
@@ -461,7 +493,7 @@ ${email ? `Email: ${email}` : ''}
 
                    <div className="space-y-2">
                      <Label htmlFor="date" className="flex gap-1">
-                       Travel Date <span className="text-destructive">*</span>
+                       Pickup Date <span className="text-destructive">*</span>
                        {errors.date && <span className="text-destructive text-sm ml-1">({errors.date})</span>}
                      </Label>
                      <Popover>
@@ -480,16 +512,61 @@ ${email ? `Email: ${email}` : ''}
                          </Button>
                        </PopoverTrigger>
                        <PopoverContent className="w-auto p-0" align="start">
-                         <CalendarComponent
+                        <CalendarComponent
                            mode="single"
                            selected={date}
-                           onSelect={setDate}
+                          onSelect={(d) => {
+                            setDate(d);
+                            setTimeout(() => (document.activeElement as HTMLElement | null)?.blur(), 0);
+                          }}
                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                            initialFocus
                          />
                        </PopoverContent>
                      </Popover>
                    </div>
+
+                   {tripType === 'round-trip' && (
+                     <div className="space-y-2">
+                       <Label htmlFor="returnDate" className="flex gap-1">
+                         Return Date <span className="text-destructive">*</span>
+                         {errors.returnDate && <span className="text-destructive text-sm ml-1">({errors.returnDate})</span>}
+                       </Label>
+                       <Popover>
+                         <PopoverTrigger asChild>
+                           <Button
+                             id="returnDate"
+                             variant="outline"
+                             className={cn(
+                               "w-full pl-10 text-left font-normal",
+                               !returnDate && "text-muted-foreground",
+                               errors.returnDate && "border-destructive"
+                             )}
+                           >
+                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                             {returnDate ? format(returnDate, "PPP") : <span>Pick return date</span>}
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                             mode="single"
+                             selected={returnDate}
+                            onSelect={(d) => {
+                              setReturnDate(d);
+                              setTimeout(() => (document.activeElement as HTMLElement | null)?.blur(), 0);
+                            }}
+                             disabled={(dateVal) => {
+                               const today = new Date(new Date().setHours(0, 0, 0, 0));
+                               if (dateVal < today) return true;
+                               if (date && dateVal <= date) return true;
+                               return false;
+                             }}
+                             initialFocus
+                           />
+                         </PopoverContent>
+                       </Popover>
+                     </div>
+                   )}
 
                    <div className="space-y-2">
                      <Label className="flex gap-1">
@@ -513,19 +590,6 @@ ${email ? `Email: ${email}` : ''}
                            </SelectContent>
                          </Select>
                        </div>
-                       <Select
-                         value={time.minute}
-                         onValueChange={(value) => setTime({ ...time, minute: value })}
-                       >
-                         <SelectTrigger className={cn("w-24", errors.time && "border-destructive")}>
-                           <SelectValue placeholder="Min" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           {['00', '15', '30', '45'].map((minute) => (
-                             <SelectItem key={minute} value={minute}>{minute}</SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
                        <Select
                          value={time.period}
                          onValueChange={(value) => setTime({ ...time, period: value as 'AM' | 'PM' })}
@@ -591,6 +655,16 @@ ${email ? `Email: ${email}` : ''}
                         <span className="text-muted-foreground">Distance</span>
                         <span className="font-medium">{distance} km</span>
                       </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Base Fare</span>
+                        <span className="font-medium">₹{baseFare.toFixed(2)}</span>
+                      </div>
+                      {driverBata > 0 && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Driver Bata (Round Trip)</span>
+                          <span className="font-medium">₹{driverBata.toFixed(2)}</span>
+                        </div>
+                      )}
                       <div className="h-px bg-border" />
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-semibold">Estimated Total:</span>
@@ -615,7 +689,10 @@ ${email ? `Email: ${email}` : ''}
                   onClick={() => {
                     const newErrors: { [key: string]: string } = {};
                     const fieldsToValidate = ['pickup', 'dropoff', 'date', 'time', 'vehicleType'];
-                    const localData = { pickup, dropoff, date, time, vehicleType };
+                    if (tripType === 'round-trip') {
+                      fieldsToValidate.push('returnDate');
+                    }
+                    const localData = { pickup, dropoff, date, returnDate, time, vehicleType };
 
                     fieldsToValidate.forEach(field => {
                       const error = validateField(field, localData[field as keyof typeof localData]);
@@ -630,10 +707,10 @@ ${email ? `Email: ${email}` : ''}
                     }
                     setStep(2);
                   }}
-                  disabled={loading || !pickup || !dropoff || !date || !time.hour || !time.minute || !vehicleType}
+                  disabled={loading || !pickup || !dropoff || !date || !time.hour || !vehicleType || (tripType === 'round-trip' && !returnDate)}
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Get Instant Quote →
+                 Book Now →
                 </Button>
               </>
             )}
@@ -767,13 +844,25 @@ ${email ? `Email: ${email}` : ''}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-primary" />
-                        <span>{date ? format(date, "PPP") : ''}</span>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Pickup Date</p>
+                          <span className="font-semibold">{date ? format(date, "PPP") : ''}</span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-primary" />
-                        <span>{time.hour && time.minute ? `${time.hour}:${time.minute} ${time.period}` : ''}</span>
+                        <span>{time.hour ? `${time.hour}:00 ${time.period}` : ''}</span>
                       </div>
                     </div>
+                    {tripType === 'round-trip' && returnDate && (
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-orange-600" />
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground">Return Date</p>
+                          <p className="font-semibold">{format(returnDate, "PPP")}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="h-px bg-border" />
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Vehicle</span>

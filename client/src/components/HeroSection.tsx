@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { filterDistricts, haversineKm } from '@/lib/tn-districts';
 
 import { useBookingForm } from '@/lib/BookingFormContext';
 
@@ -18,32 +19,21 @@ export default function HeroSection() {
   const [dropoff, setDropoff] = useState('');
   const [pickupSuggestions, setPickupSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
   const [dropoffSuggestions, setDropoffSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+  const [distanceKm, setDistanceKm] = useState<string>('');
   const pickupDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropoffDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Fetch location suggestions
-  const fetchLocationSuggestions = async (query: string, setter: (s: any[]) => void) => {
-    if (!query || query.length < 2) {
+  // District-only suggestions in Tamil Nadu
+  const fetchLocationSuggestions = (query: string, setter: (s: any[]) => void) => {
+    if (!query || query.length < 1) {
       setter([]);
       return;
     }
-    try {
-      const url = `/api/location-suggest?q=${encodeURIComponent(query)}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        setter([]);
-        return;
-      }
-      const data = await res.json();
-      setter(
-        data.map((d: any) => ({
-          display_name: d.display_name,
-          lat: d.lat,
-          lon: d.lon,
-        }))
-      );
-    } catch (err) {
-      setter([]);
-    }
+    const matches = filterDistricts(query).map(d => ({
+      display_name: d.name,
+      lat: String(d.lat),
+      lon: String(d.lon),
+    }));
+    setter(matches);
   };
 
   // Debounced handlers
@@ -66,10 +56,24 @@ export default function HeroSection() {
   const choosePickupSuggestion = (s: { display_name: string; lat: string; lon: string }) => {
     setPickup(s.display_name);
     setPickupSuggestions([]);
+    if (dropoff) {
+      const d1 = filterDistricts(s.display_name)[0];
+      const d2 = filterDistricts(dropoff)[0];
+      if (d1 && d2) {
+        setDistanceKm(haversineKm(d1, d2).toFixed(1));
+      }
+    }
   };
   const chooseDropoffSuggestion = (s: { display_name: string; lat: string; lon: string }) => {
     setDropoff(s.display_name);
     setDropoffSuggestions([]);
+    if (pickup) {
+      const d1 = filterDistricts(pickup)[0];
+      const d2 = filterDistricts(s.display_name)[0];
+      if (d1 && d2) {
+        setDistanceKm(haversineKm(d1, d2).toFixed(1));
+      }
+    }
   };
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState<{ hour: string; minute: string; period: 'AM' | 'PM' }>({ hour: '', minute: '', period: 'AM' });
@@ -114,7 +118,7 @@ export default function HeroSection() {
   const handleQuickBook = () => {
   const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
   const timeStr = time.hour && time.minute ? `${time.hour}:${time.minute} ${time.period}` : '';
-  setData({ pickup, dropoff, date: dateStr, time: timeStr });
+  setData({ pickup, dropoff, date: dateStr, time: timeStr, distance: distanceKm || '' });
     const bookingSection = document.getElementById('booking');
     if (bookingSection) {
       bookingSection.scrollIntoView({ behavior: 'smooth' });
@@ -122,7 +126,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section id="home" className="relative min-h-[85vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <section id="home" className="relative min-h-[85vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden pt-10">
       {/* High-quality luxury car background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-slow-zoom -top-20" //added -top-20 to hide bottom part of car
@@ -288,7 +292,11 @@ export default function HeroSection() {
                   <CalendarComponent
                     mode="single"
                     selected={date}
-                    onSelect={setDate}
+                    onSelect={(d) => {
+                      setDate(d);
+                      // close popover by blurring the active element
+                      setTimeout(() => (document.activeElement as HTMLElement | null)?.blur(), 0);
+                    }}
                     disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus
                   />
@@ -311,7 +319,7 @@ export default function HeroSection() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select
+                {/* <Select
                   value={time.minute}
                   onValueChange={(value) => setTime({ ...time, minute: value })}
                 >
@@ -323,7 +331,7 @@ export default function HeroSection() {
                       <SelectItem key={minute} value={minute}>{minute}</SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </Select> */}
                 <Select
                   value={time.period}
                   onValueChange={(value) => setTime({ ...time, period: value as 'AM' | 'PM' })}
@@ -345,7 +353,7 @@ export default function HeroSection() {
             onClick={handleQuickBook}
             data-testid="button-quick-book"
           >
-            Find My Perfect Ride →
+            Find My Perfect Ride → {distanceKm && <span className="ml-2 text-white/90 text-base">(~{distanceKm} km)</span>}
           </Button>
         </Card>
       </div>

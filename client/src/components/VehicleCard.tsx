@@ -64,7 +64,7 @@ export default function VehicleCard({
         <img
           src={image}
           alt={name}
-          className="w-full h-full object-cover transition-transform duration-500"
+          className="w-full h-full object-contain transition-transform duration-500"
         />
         <div className="absolute top-4 left-4 bg-secondary/90 text-white backdrop-blur-sm border-white/20 z-10 px-2.5 py-0.5 text-xs font-semibold rounded-md border">
           {type}
