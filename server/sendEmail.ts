@@ -32,6 +32,7 @@ export async function sendBookingEmail({
   pickup, 
   dropoff, 
   date, 
+  returnDate,
   time, 
   vehicleType, 
   distance, 
@@ -43,6 +44,7 @@ export async function sendBookingEmail({
   pickup: string;
   dropoff: string;
   date: string;
+  returnDate: string;
   time: string;
   vehicleType: string;
   distance: string;
@@ -61,6 +63,8 @@ Thank you for booking with NaviDrop Taxi. Here are your booking details:
 Pickup Location: ${pickup}
 Drop-off Location: ${dropoff}
 Date: ${date}
+📅 Return Date : ${returnDate}
+${returnDate ? `Return Date: ${returnDate}\n` : ''}
 Time: ${time}
 Vehicle Type: ${vehicleType}
 Estimated Distance: ${distance}
@@ -86,6 +90,8 @@ Booking Details:
 Pickup Location: ${pickup}
 Drop-off Location: ${dropoff}
 Date: ${date}
+📅 Return Date : ${returnDate}
+${returnDate ? `Return Date: ${returnDate}\n` : ''}
 Time: ${time}
 Vehicle Type: ${vehicleType}
 Estimated Distance: ${distance}
@@ -93,6 +99,8 @@ Estimated Fare: ${estimatedFare}
 
 Please process this booking and contact the customer to confirm.
 `;
+
+console.log(`Preparing to send booking emails... ${returnDate?'with return date':''}`);
 
   // Send emails to both customer and owner
   await Promise.all([

@@ -91,8 +91,13 @@ export default function Navigation() {
                 className={`gap-2 transition-all duration-300 font-semibold ${
                   isScrolled
                     ? 'border-2 border-border text-foreground hover:bg-accent hover:scale-105'
-                    : 'border-2 border-white/80 text-white hover:bg-white/20 hover:scale-105 backdrop-blur-sm'
+                    : 'border-2 border-white/80 text-yellow-500 hover:bg-white/20 hover:scale-105 backdrop-blur-sm'
                 }`}
+                style={{
+                  boxShadow : `
+                  0px 0px 15px rgb(234 179 8 / var(--tw-text-opacity, 1))
+                  `
+                }}
                 data-testid="button-call-header"
               >
                 <Phone className="w-4 h-4" />

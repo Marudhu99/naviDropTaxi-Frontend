@@ -4,37 +4,37 @@ const services = [
   {
     title: 'Airport Transfers',
     description: 'Reliable pickups and drops for Chennai, Bangalore, and other airports. On-time, every time.',
-    image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074',
+    image: './serviceImages/img1.webp',
     features: ['Meet & Greet', 'Flight Tracking', 'Luggage Assistance'],
   },
   {
     title: 'Outstation Trips',
     description: 'Comfortable long-distance travel to Chennai, Vellore, Bangalore, and beyond.',
-    image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021',
+    image: './serviceImages/img2.webp',
     features: ['One-way & Round-trip', 'Flexible Stops', 'Overnight Stays'],
   },
   {
     title: 'Local Rentals',
     description: 'Hourly or daily rentals for city exploration, shopping, or business meetings.',
-    image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070',
+    image: './serviceImages/img3.webp',
     features: ['4/8/12 Hour Packages', 'Within City Limits', 'Multiple Stops'],
   },
   {
     title: 'Corporate Services',
     description: 'Professional transportation for business meetings, conferences, and corporate events.',
-    image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070',
+    image: './serviceImages/img4.webp',
     features: ['Invoicing Available', 'Priority Booking', 'Fleet Management'],
   },
   {
     title: 'Tourist Packages',
     description: 'Explore Thiruvannamalai temples and surrounding attractions with our guided tours.',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070',
+    image: './serviceImages/img5.webp',
     features: ['Temple Tours', 'Scenic Routes', 'Local Guide Available'],
   },
   {
     title: 'Wedding & Events',
     description: 'Make your special day memorable with our premium vehicles and professional service.',
-    image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=2070',
+    image: './serviceImages/img6.webp',
     features: ['Decorated Vehicles', 'Multiple Cars', 'Punctual Service'],
   },
 ];

@@ -8,6 +8,7 @@ const vehicles = [
     models: 'Tata Indica, Swift Dzire',
     rate: 14,
     image: './Sedan.png',
+    driverBeta: 400
   },
   {
     name: 'SUV',
@@ -16,6 +17,7 @@ const vehicles = [
     models: 'Mahindra Xylo, Chevrolet Tavera',
     rate: 18,
     image: './tavera.png',
+    driverBeta: 600
   },
   {
     name: 'Innova Premium',
@@ -23,7 +25,8 @@ const vehicles = [
     capacity: '6 Passengers + Driver',
     models: 'Toyota Innova',
     rate: 19,
-    image: './innova.png',
+    image: './innova.webp',
+    driverBeta: 700
   },
   // {
   //   name: 'MUV',
@@ -45,7 +48,7 @@ export default function FleetSection() {
   };
 
   return (
-    <section id="fleet" className="py-16 md:py-24 bg-gradient-to-br from-background to-muted/20 relative overflow-hidden">
+    <section id="fleet" className="py-16 md:py-10 bg-gradient-to-br from-background to-muted/20 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
@@ -60,7 +63,7 @@ export default function FleetSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {vehicles.map((vehicle, index) => (
             <div
               key={vehicle.name}

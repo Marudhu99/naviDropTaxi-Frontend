@@ -33,6 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pickup,
         dropoff,
         date,
+        returnDate,
         time,
         vehicleType,
         distance,
@@ -43,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.body;
       // Send email
       const { sendBookingEmail } = await import('./sendEmail');
-      await sendBookingEmail({ pickup, dropoff, date, time, vehicleType, distance, name, mobile, email, estimatedFare });
+      await sendBookingEmail({ pickup, dropoff, date,returnDate,  time, vehicleType, distance, name, mobile, email, estimatedFare });
       res.json({ success: true });
     } catch (err:string|any) {
       res.status(500).json({ success: false, error: err.message });

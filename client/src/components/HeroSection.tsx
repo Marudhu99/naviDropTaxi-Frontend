@@ -163,6 +163,7 @@ export default function HeroSection() {
             <h3 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-yellow-300 leading-tight drop-shadow-2xl" style={{ textShadow: '0 0 20px rgba(251, 191, 36, 0.5)' }}>
               in 60 Seconds
             </h3>
+            
           </div>
 
           {/* Body text - 18-20px white with slight transparency */}
@@ -306,7 +307,7 @@ export default function HeroSection() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-white/90 ">Travel Time</label>
               <div className="flex gap-2">
-                <Select
+                <Select 
                   value={time.hour}
                   onValueChange={(value) => setTime({ ...time, hour: value })}
                 >

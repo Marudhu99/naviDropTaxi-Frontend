@@ -64,7 +64,7 @@ export default function VehicleCard({
         <img
           src={image}
           alt={name}
-          className="w-full h-full object-contain transition-transform duration-500"
+          className="w-full h-full object-contain transition-transform duration-500 "
         />
         <div className="absolute top-4 left-4 bg-secondary/90 text-white backdrop-blur-sm border-white/20 z-10 px-2.5 py-0.5 text-xs font-semibold rounded-md border">
           {type}
@@ -103,10 +103,10 @@ export default function VehicleCard({
             <Users className="w-5 h-5 text-primary" />
             <span className="font-semibold">{capacity.split('+')[0]} Seats</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Briefcase className="w-5 h-5 text-primary" />
-            <span className="font-semibold">2-3 Bags</span>
-          </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Briefcase className="w-5 h-5 text-primary" />
+              <span className="font-semibold">2-3 Bags</span>
+            </div>
         </div>
         
         {/* Animated pricing */}
@@ -116,16 +116,20 @@ export default function VehicleCard({
           <span data-testid={`text-rate-${name.toLowerCase().replace(/\s+/g, '-')}`}>{rate}</span>
           <span className="text-sm font-normal text-muted-foreground">/km</span>
         </div>
+        <div className="text-md text-center text-muted-foreground italic mb-2">
+          <span className='text-red-500 me-3'>*</span>
+          <span>Driver Beta : {name==='Sedan'?'400':name==='SUV'?'600':'800'} Rs</span>
+        </div>
       </CardContent>
 
-      <CardFooter className="p-6 pt-0 flex gap-2">
-        <Button
+      <CardFooter className="p-6 pt-0 "> {/* flex gap-2 changes */}
+        {/* <Button
           variant="outline"
           className="flex-1 text-sm font-semibold border-2 hover:bg-primary/10 hover:border-primary transition-all"
           onClick={() => alert(`Viewing details for ${name}`)}
         >
           View Details
-        </Button>
+        </Button> */}
         <Button
           className="flex-1 text-sm font-bold btn-ripple group-hover:scale-105 transition-transform shadow-md hover:shadow-lg bg-gradient-to-r from-primary to-orange-500"
           onClick={onBook}

@@ -27,9 +27,9 @@ type Coords = {
 };
 
 const vehicles = [
-  { id: 'sedan', name: 'Sedan (4+1)', rate: 14, models: 'Indica, Swift Dzire', driverBata: { oneWay: 0, roundTrip: 400 } },
-  { id: 'suv', name: 'SUV (6+1)', rate: 18, models: 'Xylo, Tavera', driverBata: { oneWay: 0, roundTrip: 600 } },
-  { id: 'innova', name: 'Innova Premium (6+1)', rate: 19, models: 'Toyota Innova', driverBata: { oneWay: 0, roundTrip: 800 } },
+  { id: 'sedan', name: 'Sedan (4+1)', rate: 14, models: 'Indica, Swift Dzire', driverBata: { oneWay: 0, roundTrip: 400 }, image : './Sedan.png' },
+  { id: 'suv', name: 'SUV (6+1)', rate: 18, models: 'Xylo, Tavera', driverBata: { oneWay: 0, roundTrip: 600 } , image : './tavera.png'},
+  { id: 'innova', name: 'Innova Premium (6+1)', rate: 19, models: 'Toyota Innova', driverBata: { oneWay: 0, roundTrip: 800 }, image : './innova.webp' },
   // { id: 'muv', name: 'MUV (7+1)', rate: 18, models: 'Tavera' },
 ];
 
@@ -628,6 +628,7 @@ ${email ? `Email: ${email}` : ''}
                             <div>
                               <p className="font-semibold">{vehicle.name}</p>
                               <p className="text-sm text-muted-foreground">{vehicle.models}</p>
+                              <img src={vehicle.image} alt={vehicle.name} className='w-[7rem] mt-3 aspect-auto' />
                             </div>
                             <div className="flex items-center gap-1 font-bold text-primary">
                               <IndianRupee className="w-4 h-4" />
